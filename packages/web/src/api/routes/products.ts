@@ -16,13 +16,18 @@ export const products = new Hono()
         categoriaNome: schema.categories.nome,
         prezzo: schema.products.prezzo,
         colori: schema.products.colori,
+        coloriArticolo: schema.products.coloriArticolo,
         materiali: schema.products.materiali,
         dimensioni: schema.products.dimensioni,
+        larghezza: schema.products.larghezza,
+        altezza: schema.products.altezza,
+        profondita: schema.products.profondita,
         descrizioneBreve: schema.products.descrizioneBreve,
         descrizioneCompleta: schema.products.descrizioneCompleta,
         personalizzabile: schema.products.personalizzabile,
         inEvidenza: schema.products.inEvidenza,
         immagineUrl: schema.products.immagineUrl,
+        immagini: schema.products.immagini,
         createdAt: schema.products.createdAt,
       })
       .from(schema.products)
@@ -84,13 +89,18 @@ export const products = new Hono()
         categoriaNome: schema.categories.nome,
         prezzo: schema.products.prezzo,
         colori: schema.products.colori,
+        coloriArticolo: schema.products.coloriArticolo,
         materiali: schema.products.materiali,
         dimensioni: schema.products.dimensioni,
+        larghezza: schema.products.larghezza,
+        altezza: schema.products.altezza,
+        profondita: schema.products.profondita,
         descrizioneBreve: schema.products.descrizioneBreve,
         descrizioneCompleta: schema.products.descrizioneCompleta,
         personalizzabile: schema.products.personalizzabile,
         inEvidenza: schema.products.inEvidenza,
         immagineUrl: schema.products.immagineUrl,
+        immagini: schema.products.immagini,
         createdAt: schema.products.createdAt,
       })
       .from(schema.products)
@@ -101,40 +111,50 @@ export const products = new Hono()
   })
   .post("/", requireAuth, async (c) => {
     const body = await c.req.json();
-    const { nome, categoriaId, prezzo, colori, materiali, dimensioni, descrizioneBreve, descrizioneCompleta, personalizzabile, inEvidenza, immagineUrl } = body;
+    const { nome, categoriaId, prezzo, colori, coloriArticolo, materiali, dimensioni, larghezza, altezza, profondita, descrizioneBreve, descrizioneCompleta, personalizzabile, inEvidenza, immagineUrl, immagini } = body;
     if (!nome) return c.json({ message: "Il nome del prodotto è obbligatorio" }, 400);
     const [product] = await db.insert(schema.products).values({
       nome,
       categoriaId: categoriaId ?? null,
       prezzo: prezzo ?? null,
-      colori: colori ? JSON.stringify(colori) : null,
+      colori: colori != null ? (typeof colori === "string" ? colori : JSON.stringify(colori)) : null,
+      coloriArticolo: coloriArticolo != null ? (typeof coloriArticolo === "string" ? coloriArticolo : JSON.stringify(coloriArticolo)) : null,
       materiali: materiali ?? null,
       dimensioni: dimensioni ?? null,
+      larghezza: larghezza ?? null,
+      altezza: altezza ?? null,
+      profondita: profondita ?? null,
       descrizioneBreve: descrizioneBreve ?? null,
       descrizioneCompleta: descrizioneCompleta ?? null,
       personalizzabile: personalizzabile ?? false,
       inEvidenza: inEvidenza ?? false,
       immagineUrl: immagineUrl ?? null,
+      immagini: immagini ? (typeof immagini === "string" ? immagini : JSON.stringify(immagini)) : null,
     }).returning();
     return c.json({ product }, 201);
   })
   .put("/:id", requireAuth, async (c) => {
     const id = parseInt(c.req.param("id"));
     const body = await c.req.json();
-    const { nome, categoriaId, prezzo, colori, materiali, dimensioni, descrizioneBreve, descrizioneCompleta, personalizzabile, inEvidenza, immagineUrl } = body;
+    const { nome, categoriaId, prezzo, colori, coloriArticolo, materiali, dimensioni, larghezza, altezza, profondita, descrizioneBreve, descrizioneCompleta, personalizzabile, inEvidenza, immagineUrl, immagini } = body;
     if (!nome) return c.json({ message: "Il nome del prodotto è obbligatorio" }, 400);
     const [product] = await db.update(schema.products).set({
       nome,
       categoriaId: categoriaId ?? null,
       prezzo: prezzo ?? null,
-      colori: colori ? JSON.stringify(colori) : null,
+      colori: colori != null ? (typeof colori === "string" ? colori : JSON.stringify(colori)) : null,
+      coloriArticolo: coloriArticolo != null ? (typeof coloriArticolo === "string" ? coloriArticolo : JSON.stringify(coloriArticolo)) : null,
       materiali: materiali ?? null,
       dimensioni: dimensioni ?? null,
+      larghezza: larghezza ?? null,
+      altezza: altezza ?? null,
+      profondita: profondita ?? null,
       descrizioneBreve: descrizioneBreve ?? null,
       descrizioneCompleta: descrizioneCompleta ?? null,
       personalizzabile: personalizzabile ?? false,
       inEvidenza: inEvidenza ?? false,
       immagineUrl: immagineUrl ?? null,
+      immagini: immagini ? (typeof immagini === "string" ? immagini : JSON.stringify(immagini)) : null,
     }).where(eq(schema.products.id, id)).returning();
     if (!product) return c.json({ message: "Prodotto non trovato" }, 404);
     return c.json({ product }, 200);

@@ -1,13 +1,15 @@
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { authClient, clearToken } from "../../lib/auth";
-import { Package, Tag, Home, LogOut, Menu, X, ArrowLeft, ExternalLink } from "lucide-react";
+import { Package, Tag, Home, LogOut, Menu, X, ArrowLeft, ExternalLink, Wand2, KeyRound } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: <Home size={18} /> },
   { href: "/admin/prodotti", label: "Prodotti", icon: <Package size={18} /> },
   { href: "/admin/categorie", label: "Categorie", icon: <Tag size={18} /> },
+  { href: "/admin/stilizzatore", label: "Stilizzatore immagini", icon: <Wand2 size={18} /> },
+  { href: "/admin/password", label: "Cambia password", icon: <KeyRound size={18} /> },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

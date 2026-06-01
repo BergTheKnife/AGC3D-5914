@@ -6,6 +6,7 @@ import { categories } from "./routes/categories";
 import { products } from "./routes/products";
 import { upload } from "./routes/upload";
 import { contact } from "./routes/contact";
+import { stylize } from "./routes/stylize";
 
 const app = new Hono()
   .use(cors({ origin: (origin) => origin ?? "*", credentials: true, exposeHeaders: ["set-auth-token"] }))
@@ -16,6 +17,7 @@ const app = new Hono()
   .route("/products", products)
   .route("/upload", upload)
   .route("/contact", contact)
+  .route("/stylize", stylize)
   .get("/health", (c) => c.json({ status: "ok" }, 200));
 
 export type AppType = typeof app;

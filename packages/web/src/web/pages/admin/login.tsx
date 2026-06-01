@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { authClient, captureToken } from "../../lib/auth";
+import { Eye, EyeOff } from "lucide-react";
+import { authClient, captureToken, setRemember } from "../../lib/auth";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRememberState] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [, navigate] = useLocation();
@@ -13,6 +16,9 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    // Persist the preference BEFORE login so captureToken stores the token
+    // in the correct storage (local vs session).
+    setRemember(remember);
     try {
       const { error: err } = await authClient.signIn.email(
         { email, password },
@@ -37,13 +43,12 @@ export default function AdminLoginPage() {
         {/* Logo grande senza sfondo */}
         <div className="mb-10 flex flex-col items-center">
           <img
-            src="/logo-no-bg.svg"
+            src="/login-logo.png"
             alt="AGC 3D Studios"
             className="w-48 h-48 object-contain mb-4"
-            style={{ filter: "brightness(0) invert(1)" }}
           />
           <p className="font-['Glacial_Indifference'] text-[#9A9A9A] text-xs tracking-wider uppercase">
-            Area Amministrazione
+            Gestione Catalogo
           </p>
         </div>
 
@@ -52,7 +57,7 @@ export default function AdminLoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block font-['Glacial_Indifference'] text-xs font-semibold tracking-wider uppercase text-[#9A9A9A] mb-2">
+              <label className="block font-['Glacial_Indifference'] text-xs font-semibold tracking-wider uppercase text-[#9A9A9A] mb-2 text-left">
                 Email
               </label>
               <input
@@ -65,18 +70,42 @@ export default function AdminLoginPage() {
               />
             </div>
             <div>
-              <label className="block font-['Glacial_Indifference'] text-xs font-semibold tracking-wider uppercase text-[#9A9A9A] mb-2">
+              <label className="block font-['Glacial_Indifference'] text-xs font-semibold tracking-wider uppercase text-[#9A9A9A] mb-2 text-left">
                 Password
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-[#E0E0E0] focus:border-[#111111] outline-none font-['Glacial_Indifference'] text-sm"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 pr-12 border border-[#E0E0E0] focus:border-[#111111] outline-none font-['Glacial_Indifference'] text-sm"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9A9A9A] hover:text-[#111111] transition-colors"
+                  aria-label={showPassword ? "Nascondi password" : "Mostra password"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
+
+            {/* Rimani connesso */}
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRememberState(e.target.checked)}
+                className="w-4 h-4 accent-[#CC2222]"
+              />
+              <span className="font-['Glacial_Indifference'] text-sm text-[#555555]">
+                Rimani connesso
+              </span>
+            </label>
+
             {error && (
               <p className="font-['Glacial_Indifference'] text-sm text-[#CC2222] bg-red-50 px-4 py-3 border border-red-100">
                 {error}

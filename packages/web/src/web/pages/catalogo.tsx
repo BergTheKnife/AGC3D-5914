@@ -1,10 +1,57 @@
-import { useState, useCallback } from "react";
+import { parseList } from "../lib/parse";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { Search, SlidersHorizontal, X, ChevronDown, ExternalLink } from "lucide-react";
+import { Search, SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 
-function ProductDetailModal({ product, onClose }: { product: any; onClose: () => void }) {
-  const colors: string[] = product.colori ? JSON.parse(product.colori) : [];
+function getGallery(product: any): string[] {
+  const out: string[] = [];
+  try {
+    const arr = Array.isArray(product.immagini) ? product.immagini : JSON.parse(product.immagini || "[]");
+    if (Array.isArray(arr)) out.push(...arr.filter(Boolean));
+  } catch { /* ignore */ }
+  if (product.immagineUrl && !out.includes(product.immagineUrl)) out.unshift(product.immagineUrl);
+  return out;
+}
+
+function formatDimensioni(product: any): string | null {
+  const parts = [product.larghezza, product.altezza, product.profondita];
+  if (parts.some((p) => p != null)) {
+    return parts.map((p) => (p != null ? p : "—")).join(" × ") + " cm";
+  }
+  return product.dimensioni || null;
+}
+
+export function ProductDetailModal({ product, onClose }: { product: any; onClose: () => void }) {
+  const colors: string[] = parseList(product.colori);
+  const articleColors: string[] = parseList(product.coloriArticolo);
+  const dimensioni = formatDimensioni(product);
+  const gallery = getGallery(product);
+  const [active, setActive] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
+  const current = gallery[active];
+  const touchStartX = useRef<number | null>(null);
+
+  const goPrev = useCallback(() => setActive((a) => (a - 1 + gallery.length) % gallery.length), [gallery.length]);
+  const goNext = useCallback(() => setActive((a) => (a + 1) % gallery.length), [gallery.length]);
+
+  const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current == null || gallery.length < 2) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 40) { dx < 0 ? goNext() : goPrev(); }
+    touchStartX.current = null;
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { lightbox ? setLightbox(false) : onClose(); }
+      else if (e.key === "ArrowRight") goNext();
+      else if (e.key === "ArrowLeft") goPrev();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightbox, goNext, goPrev, onClose]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
@@ -13,10 +60,19 @@ function ProductDetailModal({ product, onClose }: { product: any; onClose: () =>
         className="relative bg-white w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto sm:rounded-none"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Image */}
-        <div className="aspect-video bg-[#F8F8F8] relative overflow-hidden">
-          {product.immagineUrl ? (
-            <img src={product.immagineUrl} alt={product.nome} className="w-full h-full object-cover" />
+        {/* Image gallery */}
+        <div
+          className="aspect-video bg-[#F8F8F8] relative overflow-hidden"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          {current ? (
+            <img
+              src={current}
+              alt={product.nome}
+              className="w-full h-full object-contain cursor-zoom-in"
+              onClick={(e) => { e.stopPropagation(); setLightbox(true); }}
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <img src="/logo.svg" alt="" className="h-20 opacity-10" />
@@ -24,7 +80,7 @@ function ProductDetailModal({ product, onClose }: { product: any; onClose: () =>
           )}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 transition-colors"
+            className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 transition-colors z-10"
           >
             <X size={18} />
           </button>
@@ -33,7 +89,44 @@ function ProductDetailModal({ product, onClose }: { product: any; onClose: () =>
               Personalizzabile
             </span>
           )}
+          {gallery.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 transition-colors z-10"
+                aria-label="Precedente"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); goNext(); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 transition-colors z-10"
+                aria-label="Successiva"
+              >
+                <ChevronRight size={18} />
+              </button>
+              {/* image counter */}
+              <span className="absolute bottom-3 right-3 bg-black/55 text-white text-[11px] font-['Glacial_Indifference'] px-2 py-0.5 rounded-full z-10 pointer-events-none">
+                {active + 1} / {gallery.length}
+              </span>
+            </>
+          )}
         </div>
+
+        {/* Thumbnails */}
+        {gallery.length > 1 && (
+          <div className="flex gap-2 p-3 overflow-x-auto border-b border-[#F0F0F0]">
+            {gallery.map((url, i) => (
+              <button
+                key={url}
+                onClick={() => setActive(i)}
+                className={`w-16 h-16 shrink-0 overflow-hidden border-2 transition-colors ${i === active ? "border-[#CC2222]" : "border-transparent hover:border-[#E0E0E0]"}`}
+              >
+                <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Content */}
         <div className="p-6 sm:p-8">
@@ -56,9 +149,19 @@ function ProductDetailModal({ product, onClose }: { product: any; onClose: () =>
 
           {/* Specs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            {articleColors.length > 0 && (
+              <div className="bg-[#F8F8F8] p-4">
+                <p className="font-['Glacial_Indifference'] text-[#9A9A9A] text-xs tracking-wider uppercase mb-2">Colori articolo</p>
+                <div className="flex flex-wrap gap-2">
+                  {articleColors.map((c: string) => (
+                    <span key={c} className="font-['Glacial_Indifference'] text-sm text-[#111111] bg-white border border-[#E0E0E0] px-2 py-0.5">{c}</span>
+                  ))}
+                </div>
+              </div>
+            )}
             {colors.length > 0 && (
               <div className="bg-[#F8F8F8] p-4">
-                <p className="font-['Glacial_Indifference'] text-[#9A9A9A] text-xs tracking-wider uppercase mb-2">Colori disponibili</p>
+                <p className="font-['Glacial_Indifference'] text-[#9A9A9A] text-xs tracking-wider uppercase mb-2">Colori disponibili su richiesta</p>
                 <div className="flex flex-wrap gap-2">
                   {colors.map((c: string) => (
                     <span key={c} className="font-['Glacial_Indifference'] text-sm text-[#111111] bg-white border border-[#E0E0E0] px-2 py-0.5">{c}</span>
@@ -72,10 +175,10 @@ function ProductDetailModal({ product, onClose }: { product: any; onClose: () =>
                 <p className="font-['Glacial_Indifference'] text-sm text-[#111111]">{product.materiali}</p>
               </div>
             )}
-            {product.dimensioni && (
+            {dimensioni && (
               <div className="bg-[#F8F8F8] p-4">
                 <p className="font-['Glacial_Indifference'] text-[#9A9A9A] text-xs tracking-wider uppercase mb-2">Dimensioni</p>
-                <p className="font-['Glacial_Indifference'] text-sm text-[#111111]">{product.dimensioni}</p>
+                <p className="font-['Glacial_Indifference'] text-sm text-[#111111]">{dimensioni}</p>
               </div>
             )}
           </div>
@@ -99,12 +202,58 @@ function ProductDetailModal({ product, onClose }: { product: any; onClose: () =>
           </div>
         </div>
       </div>
+
+      {/* Fullscreen lightbox */}
+      {lightbox && current && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center"
+          onClick={(e) => { e.stopPropagation(); setLightbox(false); }}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          <img
+            src={current}
+            alt={product.nome}
+            className="max-w-[95vw] max-h-[90vh] object-contain select-none"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            onClick={(e) => { e.stopPropagation(); setLightbox(false); }}
+            className="absolute top-4 right-4 bg-white/15 hover:bg-white/30 text-white p-2.5 transition-colors rounded-full"
+            aria-label="Chiudi"
+          >
+            <X size={22} />
+          </button>
+          {gallery.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/15 hover:bg-white/30 text-white p-2.5 transition-colors rounded-full"
+                aria-label="Precedente"
+              >
+                <ChevronLeft size={26} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); goNext(); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/15 hover:bg-white/30 text-white p-2.5 transition-colors rounded-full"
+                aria-label="Successiva"
+              >
+                <ChevronRight size={26} />
+              </button>
+              <span className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/15 text-white text-sm font-['Glacial_Indifference'] px-3 py-1 rounded-full">
+                {active + 1} / {gallery.length}
+              </span>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
 function ProductCard({ product, onClick }: { product: any; onClick: () => void }) {
-  const colors: string[] = product.colori ? (() => { try { return JSON.parse(product.colori); } catch { return []; } })() : [];
+  const articleColors: string[] = parseList(product.coloriArticolo);
+  const colors: string[] = articleColors.length > 0 ? articleColors : parseList(product.colori);
 
   return (
     <div

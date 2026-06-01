@@ -1,12 +1,14 @@
 import { Route, Switch, useLocation } from "wouter";
 import { useEffect } from "react";
 import { Provider } from "./components/provider";
-import { AgentFeedback, RunableBadge } from "@runablehq/website-runtime";
+import { AgentFeedback } from "@runablehq/website-runtime";
 
 // Layouts / guards
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import SplashIntro from "./components/SplashIntro";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminLayout from "./pages/admin/layout";
 
 // Public pages
 import Home from "./pages/home";
@@ -20,6 +22,8 @@ import AdminDashboard from "./pages/admin/dashboard";
 import ProdottiAdmin from "./pages/admin/prodotti";
 import ProdottiForm from "./pages/admin/prodotti-form";
 import CategorieAdmin from "./pages/admin/categorie";
+import Stilizzatore from "./pages/admin/stilizzatore";
+import CambiaPassword from "./pages/admin/password";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -40,6 +44,7 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <Provider>
+      <SplashIntro />
       <ScrollToTop />
       <Switch>
         {/* Admin login — standalone */}
@@ -49,7 +54,23 @@ function App() {
         <Route path="/admin">
           {() => (
             <ProtectedRoute>
-              <AdminDashboard />
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            </ProtectedRoute>
+          )}
+        </Route>
+        <Route path="/admin/stilizzatore">
+          {() => (
+            <ProtectedRoute>
+              <Stilizzatore />
+            </ProtectedRoute>
+          )}
+        </Route>
+        <Route path="/admin/password">
+          {() => (
+            <ProtectedRoute>
+              <CambiaPassword />
             </ProtectedRoute>
           )}
         </Route>
@@ -70,14 +91,18 @@ function App() {
         <Route path="/admin/prodotti">
           {() => (
             <ProtectedRoute>
-              <ProdottiAdmin />
+              <AdminLayout>
+                <ProdottiAdmin />
+              </AdminLayout>
             </ProtectedRoute>
           )}
         </Route>
         <Route path="/admin/categorie">
           {() => (
             <ProtectedRoute>
-              <CategorieAdmin />
+              <AdminLayout>
+                <CategorieAdmin />
+              </AdminLayout>
             </ProtectedRoute>
           )}
         </Route>
@@ -115,8 +140,6 @@ function App() {
 
       {/* Do not remove — off by default, activated by parent iframe via postMessage */}
       {import.meta.env.DEV && <AgentFeedback />}
-      {/* "Made with Runable" badge */}
-      {<RunableBadge />}
     </Provider>
   );
 }

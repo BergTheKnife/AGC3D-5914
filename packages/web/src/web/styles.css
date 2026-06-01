@@ -102,6 +102,26 @@ p {
 .delay-400 { animation-delay: 0.4s; opacity: 0; }
 .delay-500 { animation-delay: 0.5s; opacity: 0; }
 
+/* Splash intro — premium, sober logo reveal */
+@keyframes splashLogoIn {
+  0%   { opacity: 0; transform: translateY(14px) scale(0.96); filter: blur(6px); }
+  100% { opacity: 1; transform: translateY(0)    scale(1);    filter: blur(0);   }
+}
+@keyframes splashLineIn {
+  from { opacity: 0; transform: scaleX(0); }
+  to   { opacity: 1; transform: scaleX(1); }
+}
+.splash-logo { opacity: 0; animation: splashLogoIn 0.9s cubic-bezier(.22,.61,.36,1) 0.05s forwards; }
+.splash-line { opacity: 0; transform: scaleX(0); animation: splashLineIn 0.5s ease 0.7s forwards; }
+.splash-cta  { opacity: 0; animation: fadeUp 0.5s ease 0.85s forwards; }
+.splash-hint { opacity: 0; animation: fadeIn 0.5s ease 1.15s forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo, .splash-line, .splash-cta, .splash-hint {
+    animation-duration: 0.01s; animation-delay: 0s; opacity: 1; transform: none; filter: none;
+  }
+}
+
 /* ─── Typography helpers ─────────────────────────────── */
 
 /* Eyebrow label */

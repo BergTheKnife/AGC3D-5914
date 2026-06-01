@@ -16,14 +16,19 @@ export const products = sqliteTable("products", {
   nome: text("nome").notNull(),
   categoriaId: integer("categoria_id").references(() => categories.id),
   prezzo: real("prezzo"),
-  colori: text("colori"), // JSON array string
+  colori: text("colori"), // JSON array string (colori disponibili su richiesta)
+  coloriArticolo: text("colori_articolo"), // JSON array string (colori dell'articolo)
   materiali: text("materiali"),
-  dimensioni: text("dimensioni"),
+  dimensioni: text("dimensioni"), // deprecato: mantenuto per retrocompatibilità
+  larghezza: real("larghezza"), // cm
+  altezza: real("altezza"), // cm
+  profondita: real("profondita"), // cm
   descrizioneBreve: text("descrizione_breve"),
   descrizioneCompleta: text("descrizione_completa"),
   personalizzabile: integer("personalizzabile", { mode: "boolean" }).default(false),
   inEvidenza: integer("in_evidenza", { mode: "boolean" }).default(false),
   immagineUrl: text("immagine_url"),
+  immagini: text("immagini"), // JSON array string of image URLs
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),

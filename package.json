@@ -25,6 +25,7 @@
     "@tursodatabase/api": "^1.9.2",
     "@types/bun": "latest",
     "oxlint": "^1.66.0",
+    "playwright-core": "^1.60.0",
     "turbo": "^2"
   },
   "peerDependencies": {

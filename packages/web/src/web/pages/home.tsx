@@ -1,11 +1,16 @@
 import { Link } from "wouter";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { ArrowRight, Layers, Palette, Ruler, Star } from "lucide-react";
+import { ProductDetailModal } from "./catalogo";
 
-function ProductCard({ product }: { product: any }) {
+function ProductCard({ product, onClick }: { product: any; onClick: () => void }) {
   return (
-    <div className="group bg-white border border-[#E0E0E0] hover:border-[#111111] hover:shadow-lg transition-all duration-200 cursor-pointer">
+    <div
+      onClick={onClick}
+      className="group bg-white border border-[#E0E0E0] hover:border-[#111111] hover:shadow-lg transition-all duration-200 cursor-pointer"
+    >
       <div className="aspect-square overflow-hidden bg-[#F8F8F8]">
         {product.immagineUrl ? (
           <img
@@ -54,6 +59,7 @@ const categories = [
 ];
 
 export default function HomePage() {
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const { data } = useQuery({
     queryKey: ["products-featured"],
     queryFn: async () => {
@@ -69,7 +75,7 @@ export default function HomePage() {
 
       {/* ── HERO ──────────────────────────────────────────── */}
       <section
-        className="relative min-h-[100svh] flex items-center justify-center overflow-hidden"
+        className="relative min-h-[auto] lg:min-h-[100svh] flex items-center justify-center overflow-hidden"
         style={{
           backgroundImage: "url('/marble-bg.png')",
           backgroundSize: "cover",
@@ -77,21 +83,21 @@ export default function HomePage() {
         }}
       >
         <div className="absolute inset-0 bg-white/40" />
-        <div className="relative z-10 container-xl w-full py-20 lg:py-0">
+        <div className="relative z-10 container-xl w-full py-8 lg:py-0">
           <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-10 lg:gap-16">
 
             {/* Text */}
-            <div className="text-left">
-              <span className="label-eyebrow">Stampa 3D artigianale</span>
-              <h1 className="hero-headline text-[#111111] mb-5 animate-fade-up delay-100">
+            <div className="text-center lg:text-left order-2 lg:order-1">
+              <span className="label-eyebrow">Creazioni 3D</span>
+              <h1 className="hero-headline text-[#111111] mb-4 lg:mb-5 animate-fade-up delay-100">
                 La creatività<br />
                 <span className="text-[#CC2222]">che prende forma.</span>
               </h1>
-              <p className="lead-text max-w-[42ch] mb-8 animate-fade-up delay-200">
+              <p className="lead-text max-w-[42ch] mx-auto lg:mx-0 mb-6 lg:mb-8 animate-fade-up delay-200">
                 Oggetti 3D personalizzati, creazioni su misura, idee regalo uniche.
                 Realizziamo la tua idea con passione e precisione.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 animate-fade-up delay-300">
+              <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 animate-fade-up delay-300">
                 <Link to="/catalogo">
                   <span className="btn btn-primary">Scopri il catalogo</span>
                 </Link>
@@ -101,12 +107,12 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Image */}
-            <div className="flex justify-center lg:justify-end">
+            {/* Image — desktop only (hidden on mobile to avoid brand redundancy) */}
+            <div className="hidden lg:flex justify-center lg:justify-end order-1 lg:order-2">
               <img
                 src="/hero-logo.png"
                 alt="AGC 3D Studios"
-                className="w-full max-w-[440px] lg:max-w-[600px] h-auto object-contain opacity-95"
+                className="w-full max-w-[300px] sm:max-w-[400px] lg:max-w-[600px] h-auto object-contain opacity-95"
               />
             </div>
           </div>
@@ -118,7 +124,7 @@ export default function HomePage() {
         <div className="container-xl text-center">
           <span className="label-eyebrow">Chi siamo</span>
           <h2 className="section-headline text-white mb-6 mx-auto" style={{ maxWidth: "22ch" }}>
-            Dall'idea all'oggetto. Dal design alla realtà.
+            Dall'idea alla forma. Dal design alla realtà.
           </h2>
           <p className="lead-text text-[#9A9A9A] mx-auto mb-4" style={{ maxWidth: "58ch" }}>
             AGC 3D Studios è uno studio italiano specializzato nella stampa 3D e nella creazione
@@ -175,7 +181,7 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-5">
               {featured.map((product: any) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} onClick={() => setSelectedProduct(product)} />
               ))}
             </div>
             <div className="mt-8 text-center sm:hidden">
@@ -215,7 +221,7 @@ export default function HomePage() {
             <h2 className="section-headline text-white mb-5 mx-auto" style={{ maxWidth: "20ch" }}>
               Hai un'idea in mente?
             </h2>
-            <p className="lead-text text-[#111111] mx-auto mb-10" style={{ maxWidth: "52ch" }}>
+            <p className="lead-text !text-[#111111] mx-auto mb-10" style={{ maxWidth: "52ch" }}>
               Realizziamo creazioni completamente personalizzate. Raccontaci la tua idea
               e la trasformeremo in realtà con la stampa 3D.
             </p>
@@ -228,6 +234,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {selectedProduct && (
+        <ProductDetailModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+      )}
     </div>
   );
 }
