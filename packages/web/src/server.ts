@@ -1,11 +1,14 @@
 import app from "./api";
 
 const port = Number(process.env.PORT ?? 3000);
+const host = "0.0.0.0";
+
 const distDir = `${import.meta.dir}/../dist`;
 const indexPath = `${distDir}/index.html`;
 
 const server = Bun.serve({
   port,
+  hostname: host,
   async fetch(request) {
     const url = new URL(request.url);
 
@@ -34,7 +37,7 @@ const server = Bun.serve({
   },
 });
 
-console.log(`Web server listening on http://localhost:${server.port}`);
+console.log(`Web server listening on http://${host}:${server.port}`);
 
 function getStaticFilePath(pathname: string) {
   const cleanPath = decodeURIComponent(pathname)
